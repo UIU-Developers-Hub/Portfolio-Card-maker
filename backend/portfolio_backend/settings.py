@@ -119,9 +119,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_URL = 'media/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Media files
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
@@ -164,7 +169,8 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"  # Your Next.js frontend
+    "http://localhost:3000",  # Development
+    "https://portfolio-card-maker.vercel.app",  # Production
 ]
 
 CORS_ALLOW_METHODS = [
@@ -189,16 +195,16 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Security settings
-CSRF_COOKIE_SECURE = False  # Set to True in production
-CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:9090',
-    'http://127.0.0.1:9090',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'https://portfolio-card-maker.vercel.app'
 ]
 
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
 
 # Email settings (for password reset)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
