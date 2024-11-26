@@ -91,7 +91,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 
 ### Frontend (.env.local)
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:9090
 ```
 
 ## Contributing
