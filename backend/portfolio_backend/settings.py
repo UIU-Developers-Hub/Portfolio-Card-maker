@@ -17,7 +17,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = ['*.fly.dev', 'localhost', '127.0.0.1']  # We'll restrict this in production
 
 
 # Application definition
@@ -170,8 +170,9 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://your-frontend-domain.com",
+    'https://*.fly.dev',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
 ]
 
 CORS_ALLOW_METHODS = [
@@ -199,11 +200,9 @@ CORS_ALLOW_HEADERS = [
 CSRF_COOKIE_SECURE = False  # Set to True in production
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:9090',
-    'http://127.0.0.1:9090',
+    'https://*.fly.dev',
     'http://localhost:3000',
-    "https://*.onrender.com",
-    "https://your-frontend-domain.com",
+    'http://127.0.0.1:3000'
 ]
 
 CSRF_COOKIE_SAMESITE = 'Lax'
