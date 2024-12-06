@@ -1,5 +1,9 @@
 # Portfolio Maker Website
 
+## Current Bugs
+
+- Profile updates are not saving to the database. Investigating the data transmission and backend handling.
+
 A full-stack web application for creating and managing professional portfolios. Built with Next.js and Django.
 
 ## Features
