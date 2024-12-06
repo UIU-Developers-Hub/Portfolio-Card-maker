@@ -103,11 +103,11 @@ export class ApiService {
 
   // Portfolio Data
   static async getPortfolioData(): Promise<ApiResponse<PortfolioData>> {
-    return this.fetchWithAuth('/api/portfolio/');
+    return this.fetchWithAuth('/api/portfolio/profiles/');
   }
 
   static async updatePortfolioData(data: Partial<PortfolioData>): Promise<ApiResponse<PortfolioData>> {
-    return this.fetchWithAuth('/api/portfolio/', {
+    return this.fetchWithAuth('/api/portfolio/profiles/', {
       method: 'PUT',
       body: JSON.stringify(data),
     });

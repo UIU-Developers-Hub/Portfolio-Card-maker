@@ -5,14 +5,13 @@ This is the backend API for the Portfolio Maker application, built with Django a
 ## Features
 
 - RESTful API endpoints for portfolio management
-- User authentication and authorization
+- User authentication using JWT
 - Profile management
 - Skills management
 - Projects management
 - Experience management
 - Education management
 - File upload support for profile pictures and project images
-- Admin interface for data management
 
 ## Prerequisites
 
@@ -22,6 +21,7 @@ This is the backend API for the Portfolio Maker application, built with Django a
 ## Installation
 
 1. Clone the repository
+
 2. Create a virtual environment:
    ```bash
    python -m venv venv
@@ -42,75 +42,40 @@ This is the backend API for the Portfolio Maker application, built with Django a
    pip install -r requirements.txt
    ```
 
-5. Create a .env file:
-   ```bash
-   cp .env.example .env
-   ```
-   Then edit .env with your settings
-
-6. Run migrations:
+5. Run migrations:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-7. Create a superuser:
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-8. Run the development server:
+6. Run the development server:
    ```bash
    python manage.py runserver
    ```
 
 ## API Endpoints
 
-- `/api/profiles/` - User profiles
-- `/api/skills/` - Skills
-- `/api/projects/` - Projects
-- `/api/experiences/` - Work experiences
-- `/api/education/` - Education history
+### Authentication
+- POST `/api/accounts/register/` - Register new user
+- POST `/api/accounts/login/` - Login and get JWT token
+- POST `/api/accounts/token/refresh/` - Refresh JWT token
+- POST `/api/accounts/logout/` - Logout (blacklist token)
+
+### Profile
+- GET/PUT `/api/accounts/profile/` - Get or update user profile
+
+### Portfolio
+- GET/POST `/api/portfolio/` - List or create portfolios
+- GET/PUT/DELETE `/api/portfolio/{id}/` - Retrieve, update or delete portfolio
 
 ## Authentication
 
-The API uses token-based authentication. To obtain a token:
+The API uses JWT (JSON Web Token) authentication:
 
-1. Create a user account
-2. Use the login endpoint to get your token
-3. Include the token in the Authorization header of your requests
-
-## Admin Interface
-
-Access the admin interface at `/admin/` to manage:
-
-- User profiles
-- Skills
-- Projects
-- Experiences
-- Education records
-
-## Development
-
-1. Make sure all tests pass:
-   ```bash
-   python manage.py test
+1. Register a new account using `/api/accounts/register/`
+2. Login using `/api/accounts/login/` to get access and refresh tokens
+3. Include the access token in the Authorization header:
    ```
-
-2. Run migrations after model changes:
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
+   Authorization: Bearer <your_access_token>
    ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License.
+4. Use `/api/accounts/token/refresh/` to get a new access token when it expires

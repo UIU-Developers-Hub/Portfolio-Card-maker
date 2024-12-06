@@ -27,6 +27,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+        print('Incoming request data:', request.data)  # Log incoming request data
+
         try:
             profile = UserProfile.objects.get(user=request.user)
         except UserProfile.DoesNotExist:
@@ -43,7 +45,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            print('Profile updated successfully:', serializer.data)  # Log successful update
             return Response(serializer.data)
+        else:
+            print('Validation errors:', serializer.errors)  # Log validation errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):

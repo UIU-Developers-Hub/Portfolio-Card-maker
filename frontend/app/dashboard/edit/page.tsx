@@ -156,9 +156,15 @@ export default function EditPortfolioPage() {
         ...(personalInfo.phone && { phone: personalInfo.phone })
       };
 
-      await ApiService.updateUserProfile(updateData);
-      await updateUserProfile(updateData);  // Update the context
-      toast.success('Profile updated successfully!');
+      console.log('Sending update data:', updateData);
+      const response = await ApiService.updateUserProfile(updateData);
+      console.log('Received response:', response);
+      if (response && response.data) {
+        await updateUserProfile(response.data);  // Update the context with the response data
+        toast.success('Profile updated successfully!');
+      } else {
+        throw new Error('No data returned from update');
+      }
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast.error('Failed to update profile. Please try again.');
