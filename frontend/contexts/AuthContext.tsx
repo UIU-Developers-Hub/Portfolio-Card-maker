@@ -13,6 +13,7 @@ interface AuthContextType {
   clearAuth: () => void;
   isAuthenticated: boolean;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +21,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await ApiService.getUserProfile();
+      if (response.data) {
+        const updatedUser = { ...user, ...response.data };
+        setUser(updatedUser);
+        Cookies.set('user', JSON.stringify(updatedUser), {
+          secure: true,
+          sameSite: 'strict',
+          expires: 1
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   useEffect(() => {
     // Check cookies for existing auth data
@@ -30,6 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setTokens(JSON.parse(storedTokens));
         setUser(JSON.parse(storedUser));
+        // Fetch fresh profile data when auth is restored
+        fetchUserProfile();
       } catch (e) {
         console.error('Error parsing stored auth data:', e);
         Cookies.remove('auth_tokens');
@@ -38,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setAuth = (newUser: User | null, newTokens: AuthTokens | null) => {
+  const setAuth = async (newUser: User | null, newTokens: AuthTokens | null) => {
     setUser(newUser);
     setTokens(newTokens);
     
@@ -47,13 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       Cookies.set('auth_tokens', JSON.stringify(newTokens), {
         secure: true,
         sameSite: 'strict',
-        expires: 1 // 1 day
+        expires: 1
       });
       Cookies.set('user', JSON.stringify(newUser), {
         secure: true,
         sameSite: 'strict',
-        expires: 1 // 1 day
+        expires: 1
       });
+      // Fetch fresh profile data when auth is set
+      await fetchUserProfile();
     } else {
       Cookies.remove('auth_tokens');
       Cookies.remove('user');
@@ -68,15 +90,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     try {
       const response = await ApiService.updateUserProfile(data);
-      const updatedUser = { ...user, ...response.data };
-      setUser(updatedUser);
-      Cookies.set('user', JSON.stringify(updatedUser), {
-        secure: true,
-        sameSite: 'strict',
-        expires: 1 // 1 day
-      });
+      // After updating, fetch fresh profile data
+      await fetchUserProfile();
+      toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error updating user profile:', error);
+      toast.error('Failed to update profile');
       throw error;
     }
   };
@@ -91,7 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuth,
         clearAuth,
         isAuthenticated,
-        updateUserProfile
+        updateUserProfile,
+        refreshProfile: fetchUserProfile // Add this to allow manual refresh
       }}
     >
       {children}

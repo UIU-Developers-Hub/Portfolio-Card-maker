@@ -30,8 +30,16 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            # Create UserProfile for the new user
-            UserProfile.objects.create(user=user)
+            
+            # Create UserProfile for the new user if it doesn't exist
+            try:
+                UserProfile.objects.get_or_create(user=user)
+            except Exception as e:
+                # If profile creation fails, delete the user and return error
+                user.delete()
+                return Response({
+                    "error": "Failed to create user profile. Please try again."
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             # Generate tokens
             refresh = RefreshToken.for_user(user)
@@ -91,21 +99,84 @@ class LogoutView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = UserSerializer
+    serializer_class = UserProfileSerializer
 
     def get(self, request):
-        serializer = self.serializer_class(request.user)
-        return Response({
-            'data': serializer.data,
-            'message': 'Profile retrieved successfully'
-        })
+        print(f"Authenticated user: {request.user}")  # Debug log
+        print(f"Auth header: {request.headers.get('Authorization')}")  # Debug log
+        
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            serializer = UserProfileSerializer(profile)
+            data = serializer.data
+            print(f"Profile data being sent: {data}")  # Debug log
+            
+            # Wrap the data in a response format matching frontend expectations
+            response_data = {
+                "data": data,
+                "message": "Profile retrieved successfully"
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except UserProfile.DoesNotExist:
+            print(f"Profile not found for user: {request.user}")  # Debug log
+            # Create profile if it doesn't exist
+            profile = UserProfile.objects.create(user=request.user)
+            serializer = UserProfileSerializer(profile)
+            response_data = {
+                "data": serializer.data,
+                "message": "New profile created"
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error retrieving profile: {str(e)}")  # Debug log
+            return Response(
+                {
+                    "error": "Failed to retrieve profile",
+                    "detail": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def put(self, request):
-        serializer = self.serializer_class(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                'data': serializer.data,
-                'message': 'Profile updated successfully'
-            })
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print(f"Update data received: {request.data}")  # Debug log
+        
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                serializer.save()
+                response_data = {
+                    "data": serializer.data,
+                    "message": "Profile updated successfully"
+                }
+                return Response(response_data, status=status.HTTP_200_OK)
+            
+            print(f"Validation errors: {serializer.errors}")  # Debug log
+            return Response(
+                {
+                    "error": "Invalid data",
+                    "detail": serializer.errors
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        except UserProfile.DoesNotExist:
+            print(f"Profile not found for user: {request.user}")  # Debug log
+            return Response(
+                {
+                    "error": "Profile not found",
+                    "detail": "User profile does not exist"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"Error updating profile: {str(e)}")  # Debug log
+            return Response(
+                {
+                    "error": "Failed to update profile",
+                    "detail": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -29,40 +29,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         validators=[validate_password],
         style={'input_type': 'password'}
     )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={'input_type': 'password'}
-    )
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'password2')
+        fields = ('username', 'email', 'password')
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({
-                "password": "Password fields didn't match."
-            })
-        
         # Check if email already exists
         if User.objects.filter(email=attrs['email']).exists():
             raise serializers.ValidationError({
                 "email": "User with this email already exists."
             })
-            
         return attrs
 
     def create(self, validated_data):
-        # Remove password2 from the data
-        validated_data.pop('password2', None)
-        
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password']
         )
-        
         return user
 
 class LoginSerializer(serializers.Serializer):
@@ -90,8 +75,36 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    
+    fullName = serializers.CharField(source='user.first_name', required=False, allow_blank=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    title = serializers.CharField(required=False, allow_blank=True)
+    bio = serializers.CharField(required=False, allow_blank=True)
+    location = serializers.CharField(required=False, allow_blank=True)
+    website = serializers.URLField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        fields = ('fullName', 'email', 'title', 'bio', 'location', 'website', 'phone')
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', {})
+        # Update first_name from fullName
+        if 'first_name' in user_data:
+            instance.user.first_name = user_data['first_name']
+            instance.user.save()
+
+        # Update profile fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
+
+    def to_representation(self, instance):
+        """
+        Ensure fullName is always returned from first_name
+        """
+        ret = super().to_representation(instance)
+        ret['fullName'] = instance.user.first_name or ''
+        return ret

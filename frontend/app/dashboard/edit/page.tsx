@@ -111,18 +111,26 @@ export default function EditPortfolioPage() {
   const loadPortfolioData = async () => {
     try {
       setIsLoading(true);
-      const profileResponse = await ApiService.getUserProfile();
-      const { data: profileData } = profileResponse;
+      const response = await ApiService.getUserProfile();
+      console.log('Raw API Response:', response); // Debug log
 
-      setPersonalInfo({
-        fullName: profileData.fullName || '',
-        title: profileData.title || '',
-        bio: profileData.bio || '',
-        email: profileData.email || '',
-        location: profileData.location || '',
-        website: profileData.website || '',
-        phone: profileData.phone || ''
-      });
+      if (response && response.data) {
+        const profileData = response.data;
+        console.log('Profile Data:', profileData); // Debug log
+
+        setPersonalInfo({
+          fullName: profileData.fullName || '',
+          title: profileData.title || '',
+          bio: profileData.bio || '',
+          email: profileData.email || '',
+          location: profileData.location || '',
+          website: profileData.website || '',
+          phone: profileData.phone || ''
+        });
+      } else {
+        console.error('No data in response:', response);
+        toast.error('Failed to load profile data. Invalid response format.');
+      }
     } catch (error) {
       console.error('Failed to load profile data:', error);
       toast.error('Failed to load profile data. Please try again.');
@@ -146,24 +154,25 @@ export default function EditPortfolioPage() {
     setIsSubmitting(true);
 
     try {
-      // Only include fields that have values
       const updateData = {
-        ...(personalInfo.fullName && { fullName: personalInfo.fullName }),
-        ...(personalInfo.title && { title: personalInfo.title }),
-        ...(personalInfo.bio && { bio: personalInfo.bio }),
-        ...(personalInfo.location && { location: personalInfo.location }),
-        ...(personalInfo.website && { website: personalInfo.website }),
-        ...(personalInfo.phone && { phone: personalInfo.phone })
+        fullName: personalInfo.fullName,
+        title: personalInfo.title,
+        bio: personalInfo.bio,
+        location: personalInfo.location,
+        website: personalInfo.website,
+        phone: personalInfo.phone
       };
 
-      console.log('Sending update data:', updateData);
+      console.log('Sending update data:', updateData); // Debug log
       const response = await ApiService.updateUserProfile(updateData);
-      console.log('Received response:', response);
+      console.log('Update response:', response); // Debug log
+
       if (response && response.data) {
-        await updateUserProfile(response.data);  // Update the context with the response data
         toast.success('Profile updated successfully!');
+        // Reload the data to ensure we have the latest
+        await loadPortfolioData();
       } else {
-        throw new Error('No data returned from update');
+        throw new Error('Invalid response from update');
       }
     } catch (error) {
       console.error('Failed to update profile:', error);

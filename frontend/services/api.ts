@@ -40,9 +40,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9090';
 export class ApiService {
   private static getAuthHeaders(): Record<string, string> {
     const tokens = Cookies.get('auth_tokens');
+    console.log('Current auth_tokens cookie:', tokens); // Debug log
+
     if (tokens) {
       try {
         const { access } = JSON.parse(tokens);
+        console.log('Using access token:', access); // Debug log
         return {
           'Authorization': `Bearer ${access}`,
           'Content-Type': 'application/json',
@@ -52,6 +55,7 @@ export class ApiService {
         console.error('Error parsing auth tokens:', e);
       }
     }
+    console.warn('No auth tokens found, making unauthenticated request'); // Debug log
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -69,27 +73,33 @@ export class ApiService {
       console.log(`Making API request to: ${url}`, {
         method: options.method || 'GET',
         headers: headers,
+        credentials: 'include',
         body: options.body ? JSON.parse(options.body as string) : undefined
       });
 
       const response = await fetch(url, {
         ...options,
         headers,
-        credentials: 'include', // For handling cookies
+        credentials: 'include',
       });
+
+      console.log('Response status:', response.status); // Debug log
+      console.log('Response headers:', Object.fromEntries(response.headers.entries())); // Debug log
 
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
+          console.error('Error response data:', errorData); // Debug log
           errorMessage = errorData.message || errorMessage;
         } catch (e) {
-          // If JSON parsing fails, use the default error message
+          console.error('Failed to parse error response:', e); // Debug log
         }
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log('Response data:', data); // Debug log
       return data as ApiResponse<any>;
     } catch (error) {
       console.error('API Request failed:', {
@@ -115,7 +125,16 @@ export class ApiService {
 
   // User Profile
   static async getUserProfile(): Promise<ApiResponse<User>> {
-    return this.fetchWithAuth('/api/accounts/profile/');
+    console.log('Getting user profile...'); // Debug log
+    const response = await this.fetchWithAuth('/api/accounts/profile/');
+    console.log('User profile response:', response); // Debug log
+    return response;
+  }
+
+  static async getUserProfile(): Promise<ApiResponse<User>> {
+    return this.fetchWithAuth('/api/accounts/profile/', {
+      method: 'GET'
+    });
   }
 
   static async updateUserProfile(data: Partial<User>): Promise<ApiResponse<User>> {

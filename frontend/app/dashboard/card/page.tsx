@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Button from '@/components/ui/Button';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -9,9 +9,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function BusinessCardPage() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [isFlipped, setIsFlipped] = useState(false);
   const portfolioUrl = user?.username ? `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${user.username}` : '';
+
+  // Fetch fresh profile data when component mounts
+  useEffect(() => {
+    refreshProfile();
+  }, []);
 
   const handleDownloadCard = () => {
     // TODO: Implement card download functionality
