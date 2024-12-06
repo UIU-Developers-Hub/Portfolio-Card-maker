@@ -15,6 +15,8 @@ A full-stack web application for creating and managing professional portfolios. 
 - Skills and experience sections
 - Education history
 - Social media integration
+- Responsive design
+- Digital Business Card
 
 ## Tech Stack
 
@@ -56,12 +58,12 @@ A full-stack web application for creating and managing professional portfolios. 
 
 4. Run migrations:
    ```bash
-   python manage.py migrate
+   python3 manage.py migrate
    ```
 
 5. Start the development server:
    ```bash
-   python manage.py runserver
+   python3 manage.py runserver 9090
    ```
 
 ### Frontend Setup
